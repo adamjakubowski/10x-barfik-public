@@ -1,0 +1,31 @@
+# Development Dockerfile - z hot reload
+FROM python:3.13.1-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Instalacja zależności systemowych
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Instalacja zależności Python
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+# Kopiowanie kodu (w docker-compose.dev.yml zostanie nadpisane volume)
+COPY src/ /app/
+
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:8000/api/health/ || exit 1
+
+# Komenda zostanie nadpisana w docker-compose.dev.yml
+CMD ["uvicorn", "barfik_backend.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--reload"]

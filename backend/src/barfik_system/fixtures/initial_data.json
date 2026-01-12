@@ -1,0 +1,137 @@
+[
+  {
+    "model": "barfik_system.animaltype",
+    "pk": 1,
+    "fields": {
+      "name": "Pies",
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "barfik_system.animaltype",
+    "pk": 2,
+    "fields": {
+      "name": "Kot",
+      "created_at": "2026-01-01T00:00:00Z",
+      "updated_at": "2026-01-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "barfik_system.unit",
+    "pk": 1,
+    "fields": {
+      "name": "gram",
+      "symbol": "g",
+      "conversion_factor": "1.000000"
+    }
+  },
+  {
+    "model": "barfik_system.unit",
+    "pk": 2,
+    "fields": {
+      "name": "kilogram",
+      "symbol": "kg",
+      "conversion_factor": "1000.000000"
+    }
+  },
+  {
+    "model": "barfik_system.unit",
+    "pk": 3,
+    "fields": {
+      "name": "mililitr",
+      "symbol": "ml",
+      "conversion_factor": "1.000000"
+    }
+  },
+  {
+    "model": "barfik_system.unit",
+    "pk": 4,
+    "fields": {
+      "name": "litr",
+      "symbol": "l",
+      "conversion_factor": "1000.000000"
+    }
+  },
+  {
+    "model": "barfik_system.unit",
+    "pk": 5,
+    "fields": {
+      "name": "sztuka",
+      "symbol": "szt",
+      "conversion_factor": "1.000000"
+    }
+  },
+  {
+    "model": "barfik_system.ingredientcategory",
+    "pk": 1,
+    "fields": {
+      "code": "meat",
+      "name": "Mięso",
+      "description": "Różne rodzaje mięsa (surowe lub gotowane)"
+    }
+  },
+  {
+    "model": "barfik_system.ingredientcategory",
+    "pk": 2,
+    "fields": {
+      "code": "organs",
+      "name": "Podroby",
+      "description": "Wątroba, nerki, serca itp."
+    }
+  },
+  {
+    "model": "barfik_system.ingredientcategory",
+    "pk": 3,
+    "fields": {
+      "code": "bones",
+      "name": "Kości",
+      "description": "Kości mięsne (RMB - Raw Meaty Bones)"
+    }
+  },
+  {
+    "model": "barfik_system.ingredientcategory",
+    "pk": 4,
+    "fields": {
+      "code": "vegetables",
+      "name": "Warzywa",
+      "description": "Różne warzywa"
+    }
+  },
+  {
+    "model": "barfik_system.ingredientcategory",
+    "pk": 5,
+    "fields": {
+      "code": "fruits",
+      "name": "Owoce",
+      "description": "Różne owoce"
+    }
+  },
+  {
+    "model": "barfik_system.ingredientcategory",
+    "pk": 6,
+    "fields": {
+      "code": "supplements",
+      "name": "Suplementy",
+      "description": "Witaminy, minerały, oleje itp."
+    }
+  },
+  {
+    "model": "barfik_system.ingredientcategory",
+    "pk": 7,
+    "fields": {
+      "code": "dairy",
+      "name": "Nabiał",
+      "description": "Produkty mleczne"
+    }
+  },
+  {
+    "model": "barfik_system.ingredientcategory",
+    "pk": 8,
+    "fields": {
+      "code": "other",
+      "name": "Inne",
+      "description": "Pozostałe składniki"
+    }
+  }
+]

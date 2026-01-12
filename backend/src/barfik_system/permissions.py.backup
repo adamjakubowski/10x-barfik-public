@@ -1,0 +1,245 @@
+"""Uprawnienia DRF dla aplikacji Barfik."""
+from rest_framework import permissions
+from .models import Animal, Collaboration, Diet, Ingredient
+
+
+class IsOwnerOrCollaborator(permissions.BasePermission):
+    """
+    Uprawnienie pozwalające na dostęp właścicielowi lub współpracownikom.
+    
+    - Właściciel ma pełny dostęp (CRUD)
+    - Współpracownik z EDIT może modyfikować
+    - Współpracownik z READ_ONLY może tylko czytać
+    """
+    
+    def has_object_permission(self, request, view, obj):
+        """Sprawdź uprawnienia na poziomie obiektu."""
+        # Pobierz zwierzę z obiektu
+        if isinstance(obj, Animal):
+            animal = obj
+        elif isinstance(obj, Ingredient):
+            animal = obj.diet.animal
+        elif hasattr(obj, 'animal'):
+            animal = obj.animal
+        elif isinstance(obj, Diet):
+            animal = obj.animal
+        else:
+            return False
+        
+        # Właściciel ma pełny dostęp
+        if animal.owner == request.user:
+            return True
+        
+        # Sprawdź współpracę
+        try:
+            collaboration = Collaboration.objects.get(
+                animal=animal,
+                user=request.user,
+                is_active=True
+            )
+            
+            # READ_ONLY - tylko bezpieczne metody
+            if collaboration.permission == 'READ_ONLY':
+                return request.method in permissions.SAFE_METHODS
+            
+            # EDIT - wszystkie metody oprócz DELETE
+            if collaboration.permission == 'EDIT':
+                return request.method != 'DELETE'
+            
+        except Collaboration.DoesNotExist:
+            return False
+        
+        return False
+
+
+class IsOwnerOnly(permissions.BasePermission):
+    """
+    Uprawnienie pozwalające tylko właścicielowi.
+    Używane dla operacji DELETE i zarządzania współpracą.
+    """
+    
+    def has_object_permission(self, request, view, obj):
+        """Sprawdź czy użytkownik jest właścicielem."""
+        # Pobierz zwierzę z obiektu
+        if isinstance(obj, Animal):
+            animal = obj
+        elif isinstance(obj, Ingredient):
+            animal = obj.diet.animal
+        elif hasattr(obj, 'animal'):
+            animal = obj.animal
+        elif isinstance(obj, Diet):
+            animal = obj.animal
+        else:
+            return False
+        
+        return animal.owner == request.user
+
+
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    """
+    Właściciel może modyfikować, inni tylko czytać.
+    Używane dla słowników i danych referencyjnych.
+    """
+    
+    def has_permission(self, request, view):
+        """Sprawdź uprawnienia na poziomie widoku."""
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user and request.user.is_staff
+    
+    def has_object_permission(self, request, view, obj):
+        """Sprawdź uprawnienia na poziomie obiektu."""
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user and request.user.is_staff
+
+
+class CanAccessAnimal(permissions.BasePermission):
+    """
+    Sprawdza czy użytkownik ma dostęp do zwierzęcia.
+    Używane przy tworzeniu/odczycie zasobów powiązanych ze zwierzęciem.
+    """
+    
+    def has_permission(self, request, view):
+        """Sprawdź czy użytkownik ma dostęp do zwierzęcia."""
+        # Dla LIST - zawsze pozwalamy (filtrujemy w queryset)
+        if view.action == 'list':
+            return True
+        
+        # Dla CREATE - sprawdzamy animal_id w danych
+        if request.method == 'POST':
+            animal_id = None
+            
+            # Próbuj znaleźć animal_id w różnych miejscach
+            if 'animal_id' in request.data:
+                animal_id = request.data.get('animal_id')
+            elif 'animal' in request.data:
+                animal_id = request.data.get('animal')
+            elif hasattr(view, 'kwargs') and 'animal_id' in view.kwargs:
+                animal_id = view.kwargs.get('animal_id')
+            
+            if animal_id:
+                try:
+                    animal = Animal.objects.get(id=animal_id, is_active=True)
+                    
+                    # Właściciel może wszystko
+                    if animal.owner == request.user:
+                        return True
+                    
+                    # Współpracownik z EDIT może tworzyć
+                    try:
+                        collaboration = Collaboration.objects.get(
+                            animal=animal,
+                            user=request.user,
+                            is_active=True,
+                            permission='EDIT'
+                        )
+                        return True
+                    except Collaboration.DoesNotExist:
+                        return False
+                        
+                except Animal.DoesNotExist:
+                    return False
+        
+        return True
+
+
+class IsShoppingListOwner(permissions.BasePermission):
+    """
+    Uprawnienie dla list zakupów:
+    - Użytkownik ma dostęp (odczyt i zapis) jeśli jest twórcą LUB ma dostęp do co najmniej jednej diety na liście
+    - Współpracownicy mogą zaznaczać składniki jako kupione (is_checked)
+    """
+    
+    def has_object_permission(self, request, view, obj):
+        """
+        Sprawdź czy użytkownik ma dostęp do listy zakupów lub jej pozycji.
+        
+        Logika:
+        1. Dla ShoppingListItem: pobierz shopping_list z relacji
+        2. Twórca ma pełny dostęp
+        3. Właściciel/współpracownik zwierzęcia z jakiejkolwiek diety na liście ma pełny dostęp
+        """
+        from .models import ShoppingList, ShoppingListItem
+        
+        # Dla ShoppingListItem sprawdzamy shopping_list.created_by
+        if isinstance(obj, ShoppingListItem):
+            shopping_list = obj.shopping_list
+        else:
+            shopping_list = obj
+        
+        # Twórca ma pełny dostęp
+        if shopping_list.created_by == request.user:
+            return True
+        
+        # Sprawdź dostęp do diet na liście
+        for diet in shopping_list.diets.filter(is_active=True):
+            animal = diet.animal
+            
+            # Właściciel zwierzęcia ma dostęp
+            if animal.owner == request.user:
+                return True
+            
+            # Współpracownik ma dostęp (READ_ONLY lub EDIT)
+            if Collaboration.objects.filter(
+                animal=animal,
+                user=request.user,
+                is_active=True
+            ).exists():
+                return True
+        
+        return False
+
+
+def has_access_to_animal(user, animal):
+    """
+    Helper function sprawdzający czy użytkownik ma dostęp do zwierzęcia.
+    
+    Args:
+        user: Obiekt użytkownika
+        animal: Obiekt Animal
+    
+    Returns:
+        dict z kluczami: 'has_access' (bool), 'is_owner' (bool), 'permission' (str|None)
+    """
+    # Właściciel
+    if animal.owner == user:
+        return {
+            'has_access': True,
+            'is_owner': True,
+            'permission': 'OWNER'
+        }
+    
+    # Współpracownik
+    try:
+        collaboration = Collaboration.objects.get(
+            animal=animal,
+            user=user,
+            is_active=True
+        )
+        return {
+            'has_access': True,
+            'is_owner': False,
+            'permission': collaboration.permission
+        }
+    except Collaboration.DoesNotExist:
+        return {
+            'has_access': False,
+            'is_owner': False,
+            'permission': None
+        }
+
+
+def has_edit_permission(user, animal):
+    """
+    Helper function sprawdzający czy użytkownik może edytować zasoby zwierzęcia.
+    
+    Args:
+        user: Obiekt użytkownika
+        animal: Obiekt Animal
+    
+    Returns:
+        bool
+    """
+    access_info = has_access_to_animal(user, animal)
+    return access_info['has_access'] and access_info['permission'] in ['OWNER', 'EDIT']

@@ -1,0 +1,2620 @@
+openapi: 3.0.3
+info:
+  title: Barfik API
+  version: 1.0.0
+  description: REST API dla aplikacji Barfik - planowanie diet BARF dla psów i kotów
+paths:
+  /api/animal-types/:
+    get:
+      operationId: animal_types_list
+      description: Lista gatunków zwierząt
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - animal-types
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAnimalTypeList'
+          description: ''
+  /api/animal-types/{id}/:
+    get:
+      operationId: animal_types_retrieve
+      description: Szczegóły gatunku
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Gatunek zwierzęcia.
+        required: true
+      tags:
+      - animal-types
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnimalType'
+          description: ''
+  /api/animals/:
+    get:
+      operationId: animals_list
+      description: Lista zwierząt dostępnych dla użytkownika
+      parameters:
+      - in: query
+        name: active
+        schema:
+          type: boolean
+        description: Filtruj po statusie (true=aktywne, false=usunięte, brak=wszystkie)
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Szukaj po nazwie
+      - in: query
+        name: species_id
+        schema:
+          type: integer
+        description: Filtruj po gatunku
+      tags:
+      - animals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAnimalListList'
+          description: ''
+    post:
+      operationId: animals_create
+      description: Dodaj nowe zwierzę
+      tags:
+      - animals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnimalCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnimalCreate'
+          description: ''
+  /api/animals/{animal_id}/collaborations/:
+    get:
+      operationId: animals_collaborations_list
+      description: Lista współpracowników dla zwierzęcia
+      parameters:
+      - in: path
+        name: animal_id
+        schema:
+          type: integer
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - collaborations
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCollaborationList'
+          description: ''
+    post:
+      operationId: animals_collaborations_create
+      description: Dodaj współpracownika
+      parameters:
+      - in: path
+        name: animal_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - collaborations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CollaborationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collaboration'
+          description: ''
+  /api/animals/{animal_id}/collaborations/{id}/:
+    get:
+      operationId: animals_collaborations_retrieve
+      description: Zarządzanie współpracownikami zwierzęcia.
+      parameters:
+      - in: path
+        name: animal_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - animals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collaboration'
+          description: ''
+    patch:
+      operationId: animals_collaborations_partial_update
+      description: Zaktualizuj uprawnienia (częściowo)
+      parameters:
+      - in: path
+        name: animal_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - collaborations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCollaborationRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Collaboration'
+          description: ''
+    delete:
+      operationId: animals_collaborations_destroy
+      description: Usuń współpracę
+      parameters:
+      - in: path
+        name: animal_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - collaborations
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/animals/{id}/:
+    get:
+      operationId: animals_retrieve
+      description: Szczegóły zwierzęcia
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Zwierzę.
+        required: true
+      tags:
+      - animals
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnimalDetail'
+          description: ''
+    put:
+      operationId: animals_update
+      description: Zaktualizuj zwierzę
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Zwierzę.
+        required: true
+      tags:
+      - animals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnimalDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnimalDetail'
+          description: ''
+    patch:
+      operationId: animals_partial_update
+      description: Zaktualizuj zwierzę (częściowo)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Zwierzę.
+        required: true
+      tags:
+      - animals
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedAnimalDetailRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnimalDetail'
+          description: ''
+    delete:
+      operationId: animals_destroy
+      description: Usuń zwierzę (soft delete)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Zwierzę.
+        required: true
+      tags:
+      - animals
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/refresh/:
+    post:
+      operationId: auth_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: Zarejestruj nowego użytkownika
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/dashboard/stats/:
+    get:
+      operationId: dashboard_stats_retrieve
+      description: Pobierz statystyki i alerty dla dashboardu użytkownika
+      tags:
+      - dashboard
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dashboard'
+          description: ''
+  /api/diets/:
+    get:
+      operationId: diets_list
+      description: Lista diet dostępnych dla użytkownika
+      parameters:
+      - in: query
+        name: active
+        schema:
+          type: boolean
+        description: Filtruj po statusie aktywności
+      - in: query
+        name: animal_id
+        schema:
+          type: integer
+        description: Filtruj po zwierzęciu
+      - in: query
+        name: end_date__lte
+        schema:
+          type: string
+          format: date
+        description: Data zakończenia do
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: start_date__gte
+        schema:
+          type: string
+          format: date
+        description: Data rozpoczęcia od
+      tags:
+      - diets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDietListList'
+          description: ''
+    post:
+      operationId: diets_create
+      description: Dodaj nową dietę
+      tags:
+      - diets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DietCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DietCreate'
+          description: ''
+  /api/diets/{diet_id}/ingredients/:
+    get:
+      operationId: diets_ingredients_list
+      description: Lista składników dla diety
+      parameters:
+      - in: query
+        name: category_id
+        schema:
+          type: integer
+        description: Filtruj po kategorii
+      - in: query
+        name: cooking_method
+        schema:
+          type: string
+        description: Filtruj po metodzie (raw/cooked)
+      - in: path
+        name: diet_id
+        schema:
+          type: integer
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Szukaj po nazwie
+      tags:
+      - ingredients
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIngredientList'
+          description: ''
+    post:
+      operationId: diets_ingredients_create
+      description: Dodaj składnik do diety
+      parameters:
+      - in: path
+        name: diet_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - ingredients
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngredientRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ingredient'
+          description: ''
+  /api/diets/{diet_id}/ingredients/{id}/:
+    get:
+      operationId: diets_ingredients_retrieve
+      description: Szczegóły składnika
+      parameters:
+      - in: path
+        name: diet_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - ingredients
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ingredient'
+          description: ''
+    put:
+      operationId: diets_ingredients_update
+      description: Zaktualizuj składnik
+      parameters:
+      - in: path
+        name: diet_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - ingredients
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngredientRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ingredient'
+          description: ''
+    patch:
+      operationId: diets_ingredients_partial_update
+      description: Zaktualizuj składnik (częściowo)
+      parameters:
+      - in: path
+        name: diet_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - ingredients
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedIngredientRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ingredient'
+          description: ''
+    delete:
+      operationId: diets_ingredients_destroy
+      description: Usuń składnik (soft delete)
+      parameters:
+      - in: path
+        name: diet_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - ingredients
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/diets/{id}/:
+    get:
+      operationId: diets_retrieve
+      description: Szczegóły diety ze składnikami
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Dieta.
+        required: true
+      tags:
+      - diets
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DietDetail'
+          description: ''
+    put:
+      operationId: diets_update
+      description: Zaktualizuj dietę
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Dieta.
+        required: true
+      tags:
+      - diets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DietDetailRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DietDetail'
+          description: ''
+    patch:
+      operationId: diets_partial_update
+      description: Zaktualizuj dietę (częściowo)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Dieta.
+        required: true
+      tags:
+      - diets
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDietDetailRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DietDetail'
+          description: ''
+    delete:
+      operationId: diets_destroy
+      description: Usuń dietę (soft delete)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Dieta.
+        required: true
+      tags:
+      - diets
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/ingredient-categories/:
+    get:
+      operationId: ingredient_categories_list
+      description: Lista kategorii składników
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - ingredient-categories
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIngredientCategoryList'
+          description: ''
+  /api/ingredient-categories/{id}/:
+    get:
+      operationId: ingredient_categories_retrieve
+      description: Szczegóły kategorii
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Kategoria składnika.
+        required: true
+      tags:
+      - ingredient-categories
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngredientCategory'
+          description: ''
+  /api/shopping-lists/:
+    get:
+      operationId: shopping_lists_list
+      description: Lista zakupów użytkownika
+      parameters:
+      - in: query
+        name: is_completed
+        schema:
+          type: boolean
+        description: Filtruj po statusie
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - shopping-lists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedShoppingListList'
+          description: ''
+    post:
+      operationId: shopping_lists_create
+      description: Wygeneruj nową listę zakupów
+      tags:
+      - shopping-lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShoppingListCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingListCreate'
+          description: ''
+  /api/shopping-lists/{id}/:
+    get:
+      operationId: shopping_lists_retrieve
+      description: Szczegóły listy zakupów
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Lista zakupów.
+        required: true
+      tags:
+      - shopping-lists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingList'
+          description: ''
+    put:
+      operationId: shopping_lists_update
+      description: Zaktualizuj listę zakupów
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Lista zakupów.
+        required: true
+      tags:
+      - shopping-lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShoppingListRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingList'
+          description: ''
+    patch:
+      operationId: shopping_lists_partial_update
+      description: Zaktualizuj listę zakupów (częściowo)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Lista zakupów.
+        required: true
+      tags:
+      - shopping-lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedShoppingListRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingList'
+          description: ''
+    delete:
+      operationId: shopping_lists_destroy
+      description: Usuń listę zakupów
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Lista zakupów.
+        required: true
+      tags:
+      - shopping-lists
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/shopping-lists/{id}/complete/:
+    post:
+      operationId: shopping_lists_complete_create
+      description: Oznacz listę jako ukończoną
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Lista zakupów.
+        required: true
+      tags:
+      - shopping-lists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingList'
+          description: ''
+  /api/shopping-lists/{id}/uncomplete/:
+    post:
+      operationId: shopping_lists_uncomplete_create
+      description: Oznacz listę jako nieukończoną
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Lista zakupów.
+        required: true
+      tags:
+      - shopping-lists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingList'
+          description: ''
+  /api/shopping-lists/{shopping_list_id}/items/:
+    get:
+      operationId: shopping_lists_items_list
+      description: Lista pozycji zakupów
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: path
+        name: shopping_list_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - shopping-lists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedShoppingListItemList'
+          description: ''
+  /api/shopping-lists/{shopping_list_id}/items/{id}/:
+    get:
+      operationId: shopping_lists_items_retrieve
+      description: Szczegóły pozycji
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: shopping_list_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - shopping-lists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingListItem'
+          description: ''
+    patch:
+      operationId: shopping_lists_items_partial_update
+      description: Zaktualizuj pozycję (częściowo)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: shopping_list_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - shopping-lists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedShoppingListItemRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingListItem'
+          description: ''
+  /api/shopping-lists/{shopping_list_id}/items/{id}/check/:
+    post:
+      operationId: shopping_lists_items_check_create
+      description: Zaznacz/odznacz pozycję jako kupioną
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: shopping_list_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - shopping-lists
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingListItem'
+          description: ''
+  /api/units/:
+    get:
+      operationId: units_list
+      description: Lista jednostek miar
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - units
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUnitList'
+          description: ''
+  /api/units/{id}/:
+    get:
+      operationId: units_retrieve
+      description: Szczegóły jednostki
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Jednostka.
+        required: true
+      tags:
+      - units
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unit'
+          description: ''
+  /api/users/me/:
+    get:
+      operationId: users_me_retrieve
+      description: Pobierz profil zalogowanego użytkownika
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: users_me_partial_update
+      description: Zaktualizuj profil zalogowanego użytkownika
+      tags:
+      - users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/users/search/:
+    get:
+      operationId: users_search_retrieve
+      description: Search for user by email address
+      parameters:
+      - in: query
+        name: email
+        schema:
+          type: string
+        description: Email address to search for
+        required: true
+      tags:
+      - users
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '404':
+          description: User not found
+components:
+  schemas:
+    AnimalCreate:
+      type: object
+      description: Serializer dla tworzenia zwierzęcia.
+      properties:
+        species_id:
+          type: integer
+        name:
+          type: string
+          maxLength: 64
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        weight_kg:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        note:
+          type: string
+      required:
+      - name
+      - species_id
+    AnimalCreateRequest:
+      type: object
+      description: Serializer dla tworzenia zwierzęcia.
+      properties:
+        species_id:
+          type: integer
+        name:
+          type: string
+          minLength: 1
+          maxLength: 64
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        weight_kg:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        note:
+          type: string
+      required:
+      - name
+      - species_id
+    AnimalDetail:
+      type: object
+      description: Serializer dla szczegółów zwierzęcia.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        owner:
+          type: integer
+          readOnly: true
+        owner_email:
+          type: string
+          format: email
+          readOnly: true
+        species:
+          allOf:
+          - $ref: '#/components/schemas/AnimalType'
+          readOnly: true
+        name:
+          type: string
+          maxLength: 64
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        weight_kg:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        note:
+          type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - owner
+      - owner_email
+      - species
+      - updated_at
+    AnimalDetailRequest:
+      type: object
+      description: Serializer dla szczegółów zwierzęcia.
+      properties:
+        species_id:
+          type: integer
+          writeOnly: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 64
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        weight_kg:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        note:
+          type: string
+        is_active:
+          type: boolean
+      required:
+      - name
+      - species_id
+    AnimalList:
+      type: object
+      description: Serializer dla listy zwierząt (uproszczony).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        owner:
+          type: integer
+          readOnly: true
+        owner_email:
+          type: string
+          format: email
+          readOnly: true
+        species:
+          allOf:
+          - $ref: '#/components/schemas/AnimalType'
+          readOnly: true
+        name:
+          type: string
+          maxLength: 64
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        weight_kg:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - owner
+      - owner_email
+      - species
+      - updated_at
+    AnimalType:
+      type: object
+      description: Serializer dla gatunków zwierząt.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 64
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - updated_at
+    AnimalTypeRequest:
+      type: object
+      description: Serializer dla gatunków zwierząt.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 64
+      required:
+      - name
+    AnimalWithoutDietAlert:
+      type: object
+      description: Serializer dla alertu o zwierzęciu bez diety.
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        species:
+          type: string
+      required:
+      - id
+      - name
+      - species
+    Collaboration:
+      type: object
+      description: Serializer dla współpracy.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        animal:
+          type: integer
+          readOnly: true
+        animal_name:
+          type: string
+          readOnly: true
+        user:
+          type: integer
+        user_email:
+          type: string
+          format: email
+          readOnly: true
+        permission:
+          $ref: '#/components/schemas/PermissionEnum'
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - animal
+      - animal_name
+      - created_at
+      - id
+      - updated_at
+      - user
+      - user_email
+    CollaborationRequest:
+      type: object
+      description: Serializer dla współpracy.
+      properties:
+        user:
+          type: integer
+        permission:
+          $ref: '#/components/schemas/PermissionEnum'
+        is_active:
+          type: boolean
+      required:
+      - user
+    CookingMethodEnum:
+      enum:
+      - raw
+      - cooked
+      type: string
+      description: |-
+        * `raw` - Surowe
+        * `cooked` - Gotowane
+    Dashboard:
+      type: object
+      description: Główny serializer dla dashboardu.
+      properties:
+        stats:
+          $ref: '#/components/schemas/DashboardStats'
+        alerts:
+          $ref: '#/components/schemas/DashboardAlerts'
+      required:
+      - alerts
+      - stats
+    DashboardAlerts:
+      type: object
+      description: Serializer dla alertów dashboardu.
+      properties:
+        animals_without_diet:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnimalWithoutDietAlert'
+        expiring_diets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExpiringDietAlert'
+        old_shopping_lists:
+          type: array
+          items:
+            $ref: '#/components/schemas/OldShoppingListAlert'
+      required:
+      - animals_without_diet
+      - expiring_diets
+      - old_shopping_lists
+    DashboardStats:
+      type: object
+      description: Serializer dla statystyk dashboardu.
+      properties:
+        animals_count:
+          type: integer
+          description: Liczba aktywnych zwierząt
+        active_diets_count:
+          type: integer
+          description: Liczba aktywnych diet
+        expiring_diets_count:
+          type: integer
+          description: Liczba diet wygasających w ciągu 7 dni
+        active_shopping_lists_count:
+          type: integer
+          description: Liczba aktywnych list zakupów
+        completed_shopping_lists_count:
+          type: integer
+          description: Liczba ukończonych list w bieżącym miesiącu
+      required:
+      - active_diets_count
+      - active_shopping_lists_count
+      - animals_count
+      - completed_shopping_lists_count
+      - expiring_diets_count
+    DietCreate:
+      type: object
+      description: Serializer dla tworzenia diety.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        animal_id:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        description:
+          type: string
+      required:
+      - animal_id
+      - id
+      - start_date
+    DietCreateRequest:
+      type: object
+      description: Serializer dla tworzenia diety.
+      properties:
+        animal_id:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        description:
+          type: string
+      required:
+      - animal_id
+      - start_date
+    DietDetail:
+      type: object
+      description: Serializer dla szczegółów diety z listą składników.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        animal:
+          type: integer
+        animal_name:
+          type: string
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        total_daily_mass:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          readOnly: true
+        description:
+          type: string
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ingredient'
+          readOnly: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - animal
+      - animal_name
+      - created_at
+      - id
+      - ingredients
+      - start_date
+      - total_daily_mass
+      - updated_at
+    DietDetailRequest:
+      type: object
+      description: Serializer dla szczegółów diety z listą składników.
+      properties:
+        animal:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        description:
+          type: string
+        is_active:
+          type: boolean
+      required:
+      - animal
+      - start_date
+    DietList:
+      type: object
+      description: Serializer dla listy diet (uproszczony).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        animal:
+          type: integer
+        animal_name:
+          type: string
+          readOnly: true
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        total_daily_mass:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          readOnly: true
+        description:
+          type: string
+        ingredients_count:
+          type: string
+          readOnly: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - animal
+      - animal_name
+      - created_at
+      - id
+      - ingredients_count
+      - start_date
+      - total_daily_mass
+      - updated_at
+    ExpiringDietAlert:
+      type: object
+      description: Serializer dla alertu o wygasającej diecie.
+      properties:
+        id:
+          type: integer
+        animal_id:
+          type: integer
+        animal_name:
+          type: string
+        end_date:
+          type: string
+          format: date
+        days_left:
+          type: integer
+      required:
+      - animal_id
+      - animal_name
+      - days_left
+      - end_date
+      - id
+    Ingredient:
+      type: object
+      description: Serializer dla składników.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        diet:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 128
+        category:
+          allOf:
+          - $ref: '#/components/schemas/IngredientCategory'
+          readOnly: true
+        category_id:
+          type: integer
+          nullable: true
+        cooking_method:
+          $ref: '#/components/schemas/CookingMethodEnum'
+        unit:
+          allOf:
+          - $ref: '#/components/schemas/Unit'
+          readOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        amount_in_base_unit:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+          readOnly: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - amount_in_base_unit
+      - category
+      - cooking_method
+      - created_at
+      - diet
+      - id
+      - name
+      - unit
+      - updated_at
+    IngredientCategory:
+      type: object
+      description: Serializer dla kategorii składników.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          maxLength: 32
+        name:
+          type: string
+          maxLength: 64
+        description:
+          type: string
+      required:
+      - code
+      - id
+      - name
+    IngredientCategoryRequest:
+      type: object
+      description: Serializer dla kategorii składników.
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 32
+        name:
+          type: string
+          minLength: 1
+          maxLength: 64
+        description:
+          type: string
+      required:
+      - code
+      - name
+    IngredientRequest:
+      type: object
+      description: Serializer dla składników.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        category_id:
+          type: integer
+          nullable: true
+        cooking_method:
+          $ref: '#/components/schemas/CookingMethodEnum'
+        unit_id:
+          type: integer
+          writeOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        is_active:
+          type: boolean
+      required:
+      - amount
+      - cooking_method
+      - name
+      - unit_id
+    OldShoppingListAlert:
+      type: object
+      description: Serializer dla alertu o starej liście zakupów.
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        days_old:
+          type: integer
+      required:
+      - created_at
+      - days_old
+      - id
+      - title
+    PaginatedAnimalListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnimalList'
+    PaginatedAnimalTypeList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnimalType'
+    PaginatedCollaborationList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Collaboration'
+    PaginatedDietListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DietList'
+    PaginatedIngredientCategoryList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/IngredientCategory'
+    PaginatedIngredientList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ingredient'
+    PaginatedShoppingListItemList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShoppingListItem'
+    PaginatedShoppingListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShoppingList'
+    PaginatedUnitList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Unit'
+    PatchedAnimalDetailRequest:
+      type: object
+      description: Serializer dla szczegółów zwierzęcia.
+      properties:
+        species_id:
+          type: integer
+          writeOnly: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 64
+        date_of_birth:
+          type: string
+          format: date
+          nullable: true
+        weight_kg:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,3})?$
+          nullable: true
+        note:
+          type: string
+        is_active:
+          type: boolean
+    PatchedCollaborationRequest:
+      type: object
+      description: Serializer dla współpracy.
+      properties:
+        user:
+          type: integer
+        permission:
+          $ref: '#/components/schemas/PermissionEnum'
+        is_active:
+          type: boolean
+    PatchedDietDetailRequest:
+      type: object
+      description: Serializer dla szczegółów diety z listą składników.
+      properties:
+        animal:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        description:
+          type: string
+        is_active:
+          type: boolean
+    PatchedIngredientRequest:
+      type: object
+      description: Serializer dla składników.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        category_id:
+          type: integer
+          nullable: true
+        cooking_method:
+          $ref: '#/components/schemas/CookingMethodEnum'
+        unit_id:
+          type: integer
+          writeOnly: true
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        is_active:
+          type: boolean
+    PatchedShoppingListItemRequest:
+      type: object
+      description: Serializer dla pozycji listy zakupów.
+      properties:
+        ingredient_name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        category:
+          type: string
+          maxLength: 64
+        total_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        is_checked:
+          type: boolean
+        is_active:
+          type: boolean
+    PatchedShoppingListRequest:
+      type: object
+      description: Serializer dla listy zakupów.
+      properties:
+        title:
+          type: string
+          maxLength: 128
+        days_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          description: Liczba dni dla której generowana jest lista zakupów
+        is_completed:
+          type: boolean
+        diets:
+          type: array
+          items:
+            type: integer
+        is_active:
+          type: boolean
+    PatchedUserRequest:
+      type: object
+      description: Serializer dla profilu użytkownika.
+      properties:
+        email:
+          type: string
+          format: email
+          title: Adres e-mail
+          maxLength: 254
+        first_name:
+          type: string
+          title: Imię
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nazwisko
+          maxLength: 150
+        username:
+          type: string
+          minLength: 1
+          title: Nazwa użytkownika
+          description: Wymagana. 150 lub mniej znaków. Jedynie litery, cyfry i @/./+/-/_.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+    PermissionEnum:
+      enum:
+      - READ_ONLY
+      - EDIT
+      type: string
+      description: |-
+        * `READ_ONLY` - Tylko odczyt
+        * `EDIT` - Edycja
+    ShoppingList:
+      type: object
+      description: Serializer dla listy zakupów.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        created_by:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 128
+        days_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          description: Liczba dni dla której generowana jest lista zakupów
+        is_completed:
+          type: boolean
+        diets:
+          type: array
+          items:
+            type: integer
+        diets_info:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              animal_name:
+                type: string
+              start_date:
+                type: string
+                format: date
+              end_date:
+                type: string
+                format: date
+                nullable: true
+          readOnly: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShoppingListItem'
+          readOnly: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - days_count
+      - diets
+      - diets_info
+      - id
+      - items
+      - updated_at
+    ShoppingListCreate:
+      type: object
+      description: Serializer dla tworzenia listy zakupów.
+      properties:
+        title:
+          type: string
+          maxLength: 128
+        diets:
+          type: array
+          items:
+            type: integer
+        days_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          description: Liczba dni dla której generowana jest lista zakupów
+      required:
+      - days_count
+      - diets
+    ShoppingListCreateRequest:
+      type: object
+      description: Serializer dla tworzenia listy zakupów.
+      properties:
+        title:
+          type: string
+          maxLength: 128
+        diets:
+          type: array
+          items:
+            type: integer
+        days_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          description: Liczba dni dla której generowana jest lista zakupów
+      required:
+      - days_count
+      - diets
+    ShoppingListItem:
+      type: object
+      description: Serializer dla pozycji listy zakupów.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        ingredient_name:
+          type: string
+          maxLength: 128
+        category:
+          type: string
+          maxLength: 64
+        unit:
+          allOf:
+          - $ref: '#/components/schemas/Unit'
+          readOnly: true
+        total_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        is_checked:
+          type: boolean
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - ingredient_name
+      - total_amount
+      - unit
+      - updated_at
+    ShoppingListItemRequest:
+      type: object
+      description: Serializer dla pozycji listy zakupów.
+      properties:
+        ingredient_name:
+          type: string
+          minLength: 1
+          maxLength: 128
+        category:
+          type: string
+          maxLength: 64
+        total_amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        is_checked:
+          type: boolean
+        is_active:
+          type: boolean
+      required:
+      - ingredient_name
+      - total_amount
+    ShoppingListRequest:
+      type: object
+      description: Serializer dla listy zakupów.
+      properties:
+        title:
+          type: string
+          maxLength: 128
+        days_count:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 1
+          format: int64
+          description: Liczba dni dla której generowana jest lista zakupów
+        is_completed:
+          type: boolean
+        diets:
+          type: array
+          items:
+            type: integer
+        is_active:
+          type: boolean
+      required:
+      - days_count
+      - diets
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+      required:
+      - access
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - refresh
+    Unit:
+      type: object
+      description: Serializer dla jednostek miar.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 64
+        symbol:
+          type: string
+          maxLength: 16
+        conversion_factor:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,6})?$
+      required:
+      - conversion_factor
+      - id
+      - name
+      - symbol
+    UnitRequest:
+      type: object
+      description: Serializer dla jednostek miar.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 64
+        symbol:
+          type: string
+          minLength: 1
+          maxLength: 16
+        conversion_factor:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,6}(?:\.\d{0,6})?$
+      required:
+      - conversion_factor
+      - name
+      - symbol
+    User:
+      type: object
+      description: Serializer dla profilu użytkownika.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          title: Adres e-mail
+          maxLength: 254
+        first_name:
+          type: string
+          title: Imię
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nazwisko
+          maxLength: 150
+        username:
+          type: string
+          title: Nazwa użytkownika
+          description: Wymagana. 150 lub mniej znaków. Jedynie litery, cyfry i @/./+/-/_.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+      required:
+      - id
+      - username
+    UserRegistrationRequest:
+      type: object
+      description: Serializer dla rejestracji nowego użytkownika.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        first_name:
+          type: string
+          title: Imię
+          maxLength: 150
+        last_name:
+          type: string
+          title: Nazwisko
+          maxLength: 150
+      required:
+      - email
+      - password
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+servers:
+- url: http://127.0.0.1:8000
+  description: Development server
+- url: http://localhost:8000
+  description: Development server (localhost)
+tags:
+- name: auth
+  description: Uwierzytelnianie i autoryzacja
+- name: users
+  description: Zarządzanie profilami użytkowników
+- name: animal-types
+  description: Słownik gatunków zwierząt
+- name: units
+  description: Słownik jednostek miar
+- name: ingredient-categories
+  description: Słownik kategorii składników
+- name: animals
+  description: Profile zwierząt
+- name: diets
+  description: Diety zwierząt
+- name: ingredients
+  description: Składniki diet
+- name: collaborations
+  description: Współpraca i udostępnianie zwierząt
+- name: shopping-lists
+  description: Listy zakupów

@@ -1,0 +1,82 @@
+services:
+  # PostgreSQL Database (development) - ZAKOMENTOWANE
+  # Development używa SQLite, PostgreSQL tylko w production
+  # Odkomentuj jeśli chcesz testować z PostgreSQL lokalnie
+  # db:
+  #   image: postgres:16-alpine
+  #   container_name: barfik-db-dev
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: barfik_dev
+  #     POSTGRES_USER: barfik_dev
+  #     POSTGRES_PASSWORD: devpassword123
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_dev_data:/var/lib/postgresql/data
+  #   networks:
+  #     - barfik-dev-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U barfik_dev -d barfik_dev"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+
+  # Django Backend (development with hot reload - SQLite)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: barfik-backend-dev
+    restart: unless-stopped
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=dev-secret-key-change-in-production
+      # SQLite w development - nie potrzebujemy DATABASE_URL
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount kodu źródłowego dla hot reload
+      - ./backend/src:/app:delegated
+      # Wyklucz __pycache__ i virtualenv
+      - /app/__pycache__
+      - /app/.venv
+    networks:
+      - barfik-dev-network
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+             python manage.py migrate &&
+             python manage.py loaddata barfik_system/fixtures/initial_data.json || true &&
+             uvicorn barfik_backend.asgi:application --host 0.0.0.0 --port 8000 --reload"
+
+  # React Frontend (development with hot reload)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: barfik-frontend-dev
+    restart: unless-stopped
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      # Mount kodu źródłowego dla hot reload
+      - ./frontend/src:/app:delegated
+      # Wyklucz node_modules (używamy z kontenera)
+      - /app/node_modules
+    networks:
+      - barfik-dev-network
+    depends_on:
+      - backend
+    command: npm run dev -- --host 0.0.0.0
+
+networks:
+  barfik-dev-network:
+    driver: bridge
+
+# volumes:
+#   postgres_dev_data:
+#     driver: local
